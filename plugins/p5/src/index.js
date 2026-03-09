@@ -7,7 +7,6 @@
  *
  * Sketch callbacks (all optional):
  *   p.messageReceived(msg)     - mediafuse message received
- *   p.stateChanged(states)     - overlay state changed
  *   p.commandReceived(cmd)     - custom command ({ name, data })
  *
  * Config:
@@ -39,16 +38,8 @@ function setup({ register: reg }) {
     onMessage(msg) {
       forward("messageReceived", msg);
     },
-    onStateChange(states) {
-      forward("stateChanged", states);
-    },
     onCommand(cmd) {
       forward("commandReceived", cmd);
-    },
-    onResize({ width, height }) {
-      if (p5Instance) {
-        p5Instance.resizeCanvas(width, height);
-      }
     },
     onDestroy() {
       p5Instance?.remove();
