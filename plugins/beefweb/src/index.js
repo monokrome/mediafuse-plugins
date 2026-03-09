@@ -76,9 +76,11 @@ function setup({ register: reg }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: `Now Playing: ${title || ""}`,
-          subtitle: artist ? `by ${artist}` : "",
           type: "music",
+          data: {
+            title: `Now Playing: ${title || ""}`,
+            subtitle: artist ? `by ${artist}` : "",
+          },
           duration: displaySeconds,
         }),
       });
