@@ -10,6 +10,8 @@ const DEFAULT_COLUMNS = ["%artist%", "%title%", "%album%"];
 const DEFAULT_POLL_MS = 3000;
 const DEFAULT_DISPLAY_SECONDS = 15;
 
+const TRACK_KEY_STORAGE = "beefweb:lastTrackKey";
+
 function setup({ register: reg }) {
   let channel = "default";
   let intervalId = null;
@@ -18,6 +20,8 @@ function setup({ register: reg }) {
   let beefwebUrl = null;
   let displaySeconds = DEFAULT_DISPLAY_SECONDS;
   let pollMs = DEFAULT_POLL_MS;
+
+  try { lastTrackKey = sessionStorage.getItem(TRACK_KEY_STORAGE); } catch {}
 
   const registered = reg("data", {
     onCreate(ctx) {
@@ -64,6 +68,7 @@ function setup({ register: reg }) {
       const trackKey = `${artist}|${title}`;
       if (trackKey === lastTrackKey) return;
       lastTrackKey = trackKey;
+      try { sessionStorage.setItem(TRACK_KEY_STORAGE, trackKey); } catch {}
 
       const msgUrl = `/api/messages?channel=${encodeURIComponent(channel)}`;
       await fetch(msgUrl, {
