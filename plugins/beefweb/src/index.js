@@ -2,7 +2,7 @@
  * beefweb data plugin
  *
  * Polls foobar2000's beefweb API for now-playing track info
- * and emits nowPlaying events + posts messages to the overlay.
+ * and posts now-playing messages to the overlay.
  */
 
 const DEFAULT_BASE = "http://localhost:8880";
@@ -11,7 +11,6 @@ const DEFAULT_POLL_MS = 3000;
 const DEFAULT_DISPLAY_SECONDS = 15;
 
 function setup({ register: reg }) {
-  let emit = null;
   let channel = "default";
   let intervalId = null;
   let controller = null;
@@ -22,7 +21,6 @@ function setup({ register: reg }) {
 
   const registered = reg("data", {
     onCreate(ctx) {
-      emit = ctx.emit;
       channel = ctx.config.channel || "default";
 
       const base = ctx.config.beefwebBase || DEFAULT_BASE;
@@ -66,10 +64,6 @@ function setup({ register: reg }) {
       const trackKey = `${artist}|${title}`;
       if (trackKey === lastTrackKey) return;
       lastTrackKey = trackKey;
-
-      if (emit) {
-        emit("nowPlaying", { artist, title, album });
-      }
 
       const msgUrl = `/api/messages?channel=${encodeURIComponent(channel)}`;
       await fetch(msgUrl, {

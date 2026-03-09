@@ -7,7 +7,6 @@
  *
  * Sketch callbacks (all optional):
  *   p.messageReceived(msg)     - mediafuse message received
- *   p.nowPlayingChanged(track) - track changed (or null when stopped)
  *   p.stateChanged(states)     - overlay state changed
  *   p.commandReceived(cmd)     - custom command ({ name, data })
  *
@@ -39,9 +38,6 @@ function setup({ register: reg }) {
     },
     onMessage(msg) {
       forward("messageReceived", msg);
-    },
-    onNowPlaying(track) {
-      forward("nowPlayingChanged", track);
     },
     onStateChange(states) {
       forward("stateChanged", states);
