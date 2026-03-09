@@ -16,22 +16,43 @@
  *   height  - canvas height (optional, defaults to container height)
  */
 
+import type {
+  DefinePluginFn,
+  PluginContext,
+  CreateContext,
+  StoredMessage,
+} from "mediafuse";
+
+declare global {
+  interface Window {
+    p5: new (sketch: (p: P5Instance) => void) => P5Instance;
+  }
+}
+
+interface P5Instance {
+  setup?: () => void;
+  createCanvas: (w: number, h: number) => { parent: (el: HTMLElement) => void };
+  clear: () => void;
+  remove: () => void;
+  [key: string]: unknown;
+}
+
 const DEFAULT_P5_CDN = "https://cdn.jsdelivr.net/npm/p5@1/lib/p5.min.js";
 
-function setup({ register: reg }) {
-  let container = null;
-  let p5Instance = null;
+function setup({ register: reg }: PluginContext): void {
+  let container: HTMLDivElement | null = null;
+  let p5Instance: P5Instance | null = null;
   let isDev = false;
-  let pendingMessage = undefined;
-  let pendingCommand = undefined;
+  let pendingMessage: StoredMessage | null | undefined = undefined;
+  let pendingCommand: { name: string; data: unknown } | undefined = undefined;
 
   const registered = reg("overlay", {
-    onCreate(ctx) {
+    onCreate(ctx: CreateContext) {
       container = ctx.container;
       isDev = ctx.dev ?? false;
       if (!container) return;
 
-      const sketchUrl = ctx.config.sketch;
+      const sketchUrl = ctx.config.sketch as string | undefined;
       if (!sketchUrl) {
         console.warn("[mediafuse-p5] No sketch URL provided in config");
         return;
@@ -61,13 +82,13 @@ function setup({ register: reg }) {
 
   if (!registered) return;
 
-  function forward(method, data) {
+  function forward(method: string, data: unknown): void {
     if (p5Instance && typeof p5Instance[method] === "function") {
-      p5Instance[method](data);
+      (p5Instance[method] as (d: unknown) => void)(data);
     }
   }
 
-  function flushPending() {
+  function flushPending(): void {
     if (pendingMessage !== undefined) {
       forward("messageReceived", pendingMessage);
       pendingMessage = undefined;
@@ -78,16 +99,17 @@ function setup({ register: reg }) {
     }
   }
 
-  async function init(config) {
-    const p5Cdn = config.p5Cdn || DEFAULT_P5_CDN;
+  async function init(config: Record<string, unknown>): Promise<void> {
+    const p5Cdn = (config.p5Cdn as string) || DEFAULT_P5_CDN;
 
     if (!window.p5) {
       await loadScript(p5Cdn);
     }
 
+    const sketch = config.sketch as string;
     const sketchUrl = isDev
-      ? config.sketch + (config.sketch.includes("?") ? "&" : "?") + "t=" + Date.now()
-      : config.sketch;
+      ? sketch + (sketch.includes("?") ? "&" : "?") + "t=" + Date.now()
+      : sketch;
     const sketchModule = await import(/* webpackIgnore: true */ sketchUrl);
     const sketchFn = sketchModule.default ?? sketchModule;
 
@@ -96,17 +118,17 @@ function setup({ register: reg }) {
       return;
     }
 
-    container.style.pointerEvents = "auto";
+    container!.style.pointerEvents = "auto";
 
-    p5Instance = new window.p5((p) => {
+    p5Instance = new window.p5((p: P5Instance) => {
       sketchFn(p);
 
       const userSetup = p.setup;
       p.setup = () => {
-        const w = config.width || container.clientWidth || window.innerWidth;
-        const h = config.height || container.clientHeight || window.innerHeight;
+        const w = (config.width as number) || container!.clientWidth || window.innerWidth;
+        const h = (config.height as number) || container!.clientHeight || window.innerHeight;
         const canvas = p.createCanvas(w, h);
-        canvas.parent(container);
+        canvas.parent(container!);
         p.clear();
 
         if (userSetup) userSetup();
@@ -116,7 +138,7 @@ function setup({ register: reg }) {
     flushPending();
   }
 
-  function loadScript(url) {
+  function loadScript(url: string): Promise<void> {
     return new Promise((resolve, reject) => {
       const existing = document.querySelector(`script[src="${url}"]`);
       if (existing) {
@@ -126,11 +148,11 @@ function setup({ register: reg }) {
 
       const script = document.createElement("script");
       script.src = url;
-      script.onload = resolve;
+      script.onload = () => resolve();
       script.onerror = () => reject(new Error(`Failed to load ${url}`));
       document.head.appendChild(script);
     });
   }
 }
 
-export default (definePlugin) => definePlugin("mediafuse-p5", setup);
+export default (definePlugin: DefinePluginFn) => definePlugin("mediafuse-p5", setup);

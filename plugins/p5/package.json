@@ -5,16 +5,13 @@
   "license": "BSD-2-Clause",
   "main": "dist/p5-plugin.js",
   "mediafuse": {
-    "plugins": {
-      "src": "./src/index.js",
-      "allowTypes": ["overlay"]
-    }
+    "plugins": ["./src/index.ts"]
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "esbuild src/index.js --bundle --format=esm --outfile=dist/p5-plugin.js"
+    "build": "esbuild src/index.ts --bundle --format=esm --outfile=dist/p5-plugin.js"
   },
   "devDependencies": {
     "esbuild": "^0.25.0"
