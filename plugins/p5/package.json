@@ -4,6 +4,12 @@
   "type": "module",
   "license": "BSD-2-Clause",
   "main": "dist/p5-plugin.js",
+  "mediafuse": {
+    "plugins": {
+      "src": "./src/index.js",
+      "allowTypes": ["overlay"]
+    }
+  },
   "files": [
     "dist"
   ],

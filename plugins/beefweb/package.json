@@ -4,6 +4,12 @@
   "type": "module",
   "license": "BSD-2-Clause",
   "main": "dist/beefweb.js",
+  "mediafuse": {
+    "plugins": {
+      "src": "./src/index.js",
+      "allowTypes": ["data"]
+    }
+  },
   "files": [
     "dist"
   ],
