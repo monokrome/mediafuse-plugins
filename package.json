@@ -3,9 +3,16 @@
   "workspaces": [
     "plugins/*"
   ],
+  "scripts": {
+    "test": "vitest run"
+  },
   "license": "BSD-2-Clause",
   "repository": {
     "type": "git",
     "url": "https://codeberg.org/mediafuse/plugins"
+  },
+  "devDependencies": {
+    "mediafuse": "^0.1.2",
+    "vitest": "^4.0.18"
   }
 }
