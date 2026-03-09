@@ -3,5 +3,9 @@
   "workspaces": [
     "plugins/*"
   ],
-  "license": "BSD-2-Clause"
+  "license": "BSD-2-Clause",
+  "repository": {
+    "type": "git",
+    "url": "https://codeberg.org/mediafuse/plugins"
+  }
 }
