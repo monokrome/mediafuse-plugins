@@ -5,6 +5,12 @@
  * inside the overlay container. Messages from mediafuse are
  * forwarded to the sketch via p.messageReceived(msg).
  *
+ * Sketch callbacks (all optional):
+ *   p.messageReceived(msg)     - mediafuse message received
+ *   p.nowPlayingChanged(track) - track changed (or null when stopped)
+ *   p.stateChanged(states)     - overlay state changed
+ *   p.commandReceived(cmd)     - custom command ({ name, data })
+ *
  * Config:
  *   sketch  - URL to the sketch module (required)
  *   p5Cdn   - URL to p5.js (optional, defaults to jsdelivr)
@@ -32,9 +38,16 @@ function setup({ register: reg }) {
       init(ctx.config);
     },
     onMessage(msg) {
-      if (p5Instance && typeof p5Instance.messageReceived === "function") {
-        p5Instance.messageReceived(msg);
-      }
+      forward("messageReceived", msg);
+    },
+    onNowPlaying(track) {
+      forward("nowPlayingChanged", track);
+    },
+    onStateChange(states) {
+      forward("stateChanged", states);
+    },
+    onCommand(cmd) {
+      forward("commandReceived", cmd);
     },
     onResize({ width, height }) {
       if (p5Instance) {
@@ -48,6 +61,12 @@ function setup({ register: reg }) {
   });
 
   if (!registered) return;
+
+  function forward(method, data) {
+    if (p5Instance && typeof p5Instance[method] === "function") {
+      p5Instance[method](data);
+    }
+  }
 
   async function init(config) {
     const p5Cdn = config.p5Cdn || DEFAULT_P5_CDN;
