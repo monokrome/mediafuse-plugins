@@ -1,0 +1,16 @@
+{
+  "name": "@mediafuse/beefweb",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "BSD-2-Clause",
+  "main": "dist/beefweb.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --format=esm --outfile=dist/beefweb.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

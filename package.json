@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "workspaces": [
+    "plugins/*"
+  ],
+  "license": "BSD-2-Clause"
+}

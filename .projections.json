@@ -1,0 +1,8 @@
+{
+  "plugins/*/src/index.js": {
+    "alternate": "plugins/{}/tests/index.test.js"
+  },
+  "plugins/*/tests/index.test.js": {
+    "alternate": "plugins/{}/src/index.js"
+  }
+}
