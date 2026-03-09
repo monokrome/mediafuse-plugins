@@ -21,10 +21,14 @@ const DEFAULT_P5_CDN = "https://cdn.jsdelivr.net/npm/p5@1/lib/p5.min.js";
 function setup({ register: reg }) {
   let container = null;
   let p5Instance = null;
+  let isDev = false;
+  let pendingMessage = undefined;
+  let pendingCommand = undefined;
 
   const registered = reg("overlay", {
     onCreate(ctx) {
       container = ctx.container;
+      isDev = ctx.dev ?? false;
       if (!container) return;
 
       const sketchUrl = ctx.config.sketch;
@@ -36,9 +40,17 @@ function setup({ register: reg }) {
       init(ctx.config);
     },
     onMessage(msg) {
+      if (!p5Instance) {
+        pendingMessage = msg;
+        return;
+      }
       forward("messageReceived", msg);
     },
     onCommand(cmd) {
+      if (!p5Instance) {
+        pendingCommand = cmd;
+        return;
+      }
       forward("commandReceived", cmd);
     },
     onDestroy() {
@@ -55,6 +67,17 @@ function setup({ register: reg }) {
     }
   }
 
+  function flushPending() {
+    if (pendingMessage !== undefined) {
+      forward("messageReceived", pendingMessage);
+      pendingMessage = undefined;
+    }
+    if (pendingCommand !== undefined) {
+      forward("commandReceived", pendingCommand);
+      pendingCommand = undefined;
+    }
+  }
+
   async function init(config) {
     const p5Cdn = config.p5Cdn || DEFAULT_P5_CDN;
 
@@ -62,7 +85,10 @@ function setup({ register: reg }) {
       await loadScript(p5Cdn);
     }
 
-    const sketchModule = await import(/* webpackIgnore: true */ config.sketch);
+    const sketchUrl = isDev
+      ? config.sketch + (config.sketch.includes("?") ? "&" : "?") + "t=" + Date.now()
+      : config.sketch;
+    const sketchModule = await import(/* webpackIgnore: true */ sketchUrl);
     const sketchFn = sketchModule.default ?? sketchModule;
 
     if (typeof sketchFn !== "function") {
@@ -86,6 +112,8 @@ function setup({ register: reg }) {
         if (userSetup) userSetup();
       };
     });
+
+    flushPending();
   }
 
   function loadScript(url) {
