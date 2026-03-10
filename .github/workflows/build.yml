@@ -42,3 +42,13 @@ jobs:
 
           body="Automated build from $(git rev-parse --short HEAD)"
           gh release create "$tag" --title "$tag" --notes "$body" plugins/*/dist/*
+
+      - name: Delete releases older than 90 days
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cutoff=$(date -u -d '90 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          gh release list --limit 100 --json tagName,createdAt -q \
+            ".[] | select(.createdAt < \"$cutoff\") | .tagName" | while read -r old_tag; do
+            gh release delete "$old_tag" --yes --cleanup-tag
+          done
