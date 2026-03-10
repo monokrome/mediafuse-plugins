@@ -25,13 +25,7 @@ jobs:
       - run: pnpm install
 
       - name: Build plugins
-        run: |
-          for dir in plugins/*/; do
-            name=$(basename "$dir")
-            if [ -f "$dir/src/index.ts" ]; then
-              npx esbuild "$dir/src/index.ts" --bundle --format=esm --outdir="$dir/dist" --external:mediafuse
-            fi
-          done
+        run: pnpm -r --filter './plugins/*' run build
 
       - name: Create timestamped tag and release
         env:
