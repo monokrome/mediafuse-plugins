@@ -1,8 +1,5 @@
 {
   "private": true,
-  "workspaces": [
-    "plugins/*"
-  ],
   "license": "BSD-2-Clause",
   "dependencies": {
     "mediafuse": "^0.2.0"
