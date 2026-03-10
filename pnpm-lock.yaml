@@ -1,0 +1,22 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      mediafuse:
+        specifier: ^0.1.2
+        version: 0.1.2
+
+packages:
+
+  mediafuse@0.1.2:
+    resolution: {integrity: sha512-zm8zB36C1Nw3/rZMvRW19xx07M7D3RcSR1RvQm0sg6NDPhIqWF8/UFaCxFBwUfuZcnhzNqvxYll2Ehw96nn5Zg==}
+
+snapshots:
+
+  mediafuse@0.1.2: {}
