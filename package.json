@@ -3,5 +3,8 @@
   "license": "BSD-2-Clause",
   "dependencies": {
     "mediafuse": "^0.2.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
   }
 }
