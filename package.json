@@ -5,6 +5,6 @@
   ],
   "license": "BSD-2-Clause",
   "dependencies": {
-    "mediafuse": "^0.1.2"
+    "mediafuse": "^0.2.0"
   }
 }
