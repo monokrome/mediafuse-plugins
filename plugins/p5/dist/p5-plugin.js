@@ -4,12 +4,14 @@ function setup({ register: reg }) {
   let container = null;
   let p5Instance = null;
   let isDev = false;
+  let messageActioned = null;
   let pendingMessage = void 0;
   let pendingCommand = void 0;
   const registered = reg("overlay", {
     onCreate(ctx) {
       container = ctx.container;
       isDev = ctx.dev ?? false;
+      messageActioned = ctx.messageActioned;
       if (!container) return;
       const sketchUrl = ctx.config.sketch;
       if (!sketchUrl) {
@@ -72,6 +74,9 @@ function setup({ register: reg }) {
     container.style.pointerEvents = "auto";
     p5Instance = new window.p5((p) => {
       sketchFn(p);
+      p.messageDisplayed = (durationMs) => {
+        if (messageActioned) messageActioned(durationMs);
+      };
       const userSetup = p.setup;
       p.setup = () => {
         const w = config.width || container.clientWidth || window.innerWidth;
