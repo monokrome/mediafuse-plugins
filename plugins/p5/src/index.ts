@@ -43,6 +43,8 @@ function setup({ register: reg }: PluginContext): void {
   let container: HTMLDivElement | null = null;
   let p5Instance: P5Instance | null = null;
   let isDev = false;
+  let channel: string | null = null;
+  let displayTimer: ReturnType<typeof setTimeout> | null = null;
   let pendingMessage: StoredMessage | null | undefined = undefined;
   let pendingCommand: { name: string; data: unknown } | undefined = undefined;
 
@@ -50,6 +52,7 @@ function setup({ register: reg }: PluginContext): void {
     onCreate(ctx: CreateContext) {
       container = ctx.container;
       isDev = ctx.dev ?? false;
+      channel = (ctx.config.channel as string) || null;
       if (!container) return;
 
       const sketchUrl = ctx.config.sketch as string | undefined;
@@ -75,6 +78,7 @@ function setup({ register: reg }: PluginContext): void {
       forward("commandReceived", cmd);
     },
     onDestroy() {
+      if (displayTimer) clearTimeout(displayTimer);
       p5Instance?.remove();
       p5Instance = null;
     },
@@ -122,6 +126,16 @@ function setup({ register: reg }: PluginContext): void {
 
     p5Instance = new window.p5((p: P5Instance) => {
       sketchFn(p);
+
+      p.messageDisplayed = (durationMs: number | null) => {
+        if (displayTimer) clearTimeout(displayTimer);
+        if (durationMs === null || durationMs <= 0) return;
+        displayTimer = setTimeout(() => {
+          displayTimer = null;
+          if (!channel) return;
+          fetch(`/api/messages?channel=${encodeURIComponent(channel)}`, { method: "PATCH" });
+        }, durationMs);
+      };
 
       const userSetup = p.setup;
       p.setup = () => {
