@@ -39,7 +39,7 @@ interface P5Instance {
 
 const DEFAULT_P5_CDN = "https://cdn.jsdelivr.net/npm/p5@1/lib/p5.min.js";
 
-function setup({ register: reg }: PluginContext): void {
+function setup({ register: reg, load }: PluginContext): void {
   let container: HTMLDivElement | null = null;
   let p5Instance: P5Instance | null = null;
   let isDev = false;
@@ -109,10 +109,7 @@ function setup({ register: reg }: PluginContext): void {
     }
 
     const sketch = config.sketch as string;
-    const sketchUrl = isDev
-      ? sketch + (sketch.includes("?") ? "&" : "?") + "t=" + Date.now()
-      : sketch;
-    const sketchModule = await import(/* webpackIgnore: true */ sketchUrl);
+    const sketchModule = await load(sketch, "source") as Record<string, unknown>;
     const sketchFn = sketchModule.default ?? sketchModule;
 
     if (typeof sketchFn !== "function") {
