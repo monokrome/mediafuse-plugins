@@ -1,0 +1,19 @@
+{
+  "name": "@mediafuse/debug",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "BSD-2-Clause",
+  "main": "dist/debug.js",
+  "mediafuse": {
+    "plugins": ["./src/index.js"]
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --format=esm --outfile=dist/debug.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
