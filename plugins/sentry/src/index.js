@@ -2,8 +2,7 @@
  * mediafuse-sentry overlay plugin
  *
  * Initializes Sentry error tracking in the overlay context.
- * Only runs in the overlay environment — skips initialization
- * when loaded in the dashboard.
+ * Only registers in the overlay environment — never loads in the dashboard.
  *
  * Config:
  *   dsn          - Sentry DSN (required)
@@ -19,8 +18,6 @@ function setup({ register: reg }) {
 
   reg("overlay", {
     onCreate(ctx) {
-      if (ctx.environment !== "overlay") return;
-
       const dsn = ctx.config.sentryDsn;
       if (!dsn) return;
 
@@ -46,7 +43,7 @@ function setup({ register: reg }) {
         initialized = false;
       }
     },
-  });
+  }, { environment: "overlay" });
 }
 
 export default (definePlugin) => definePlugin("sentry", setup);
