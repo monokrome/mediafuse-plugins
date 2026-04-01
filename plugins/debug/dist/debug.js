@@ -17,7 +17,7 @@ function setup({ register: reg }) {
         background: "rgba(0,0,0,0.85)",
         color: "#e8ddf5",
         fontFamily: "monospace",
-        fontSize: "2vw",
+        fontSize: "3vh",
         lineHeight: "1.5",
         padding: "8px 10px",
         borderRadius: "4px",
