@@ -45,9 +45,9 @@ function setup({ register: reg }) {
       lastMessageAt = msg ? Date.now() : lastMessageAt;
       render();
     },
-    onMessageActioned(durationMs) {
+    onMessageActioned(duration) {
       lastActionedAt = Date.now();
-      lastActionedDuration = durationMs;
+      lastActionedDuration = duration;
       render();
     },
     onDestroy() {
@@ -62,15 +62,15 @@ function setup({ register: reg }) {
     const msgAge = lastMessageAt ? Math.round((now - lastMessageAt) / 1000) : null;
     const actionAge = lastActionedAt ? Math.round((now - lastActionedAt) / 1000) : null;
     const actionExpiry = lastActionedAt && lastActionedDuration
-      ? Math.round((lastActionedDuration / 1000) - (now - lastActionedAt) / 1000)
+      ? Math.round(lastActionedDuration - (now - lastActionedAt) / 1000)
       : null;
 
     const lines = [
       `msgs: ${messageCount}`,
       `type: ${lastMessage?.type ?? "null"}`,
-      `durationMs: ${lastMessage?.durationMs ?? "null"}`,
+      `duration: ${lastMessage?.duration ?? "null"}s`,
       `age: ${msgAge !== null ? msgAge + "s" : "-"}`,
-      `actioned: ${lastActionedDuration !== null ? lastActionedDuration + "ms" : "-"}`,
+      `actioned: ${lastActionedDuration !== null ? lastActionedDuration + "s" : "-"}`,
       `actioned age: ${actionAge !== null ? actionAge + "s ago" : "-"}`,
       `expires in: ${actionExpiry !== null ? (actionExpiry > 0 ? actionExpiry + "s" : "expired") : "-"}`,
       `data: ${lastMessage?.data ? JSON.stringify(lastMessage.data).slice(0, 120) : "-"}`,

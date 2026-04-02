@@ -43,7 +43,7 @@ function setup({ register: reg }: PluginContext): void {
   let container: HTMLDivElement | null = null;
   let p5Instance: P5Instance | null = null;
   let isDev = false;
-  let messageActioned: ((durationMs: number | null) => void) | null = null;
+  let messageActioned: ((duration: number | null) => void) | null = null;
   let pendingMessage: StoredMessage | null | undefined = undefined;
   let pendingCommand: { name: string; data: unknown } | undefined = undefined;
 
@@ -125,8 +125,8 @@ function setup({ register: reg }: PluginContext): void {
     p5Instance = new window.p5((p: P5Instance) => {
       sketchFn(p);
 
-      p.messageDisplayed = (durationMs: number | null) => {
-        if (messageActioned) messageActioned(durationMs);
+      p.messageDisplayed = (duration: number | null) => {
+        if (messageActioned) messageActioned(duration);
       };
 
       const userSetup = p.setup;
