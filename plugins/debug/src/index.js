@@ -25,7 +25,7 @@ function setup({ register: reg }) {
         background: "rgba(0,0,0,0.85)",
         color: "#e8ddf5",
         fontFamily: "monospace",
-        fontSize: "3vh",
+        fontSize: "48px",
         lineHeight: "1.5",
         padding: "8px 10px",
         borderRadius: "4px",
@@ -36,14 +36,6 @@ function setup({ register: reg }) {
       });
       document.body.appendChild(el);
 
-      const origActioned = ctx.messageActioned;
-      ctx.messageActioned = (durationMs) => {
-        lastActionedAt = Date.now();
-        lastActionedDuration = durationMs;
-        render();
-        if (origActioned) origActioned(durationMs);
-      };
-
       render();
       setInterval(render, 500);
     },
@@ -51,6 +43,11 @@ function setup({ register: reg }) {
       messageCount++;
       lastMessage = msg;
       lastMessageAt = msg ? Date.now() : lastMessageAt;
+      render();
+    },
+    onMessageActioned(durationMs) {
+      lastActionedAt = Date.now();
+      lastActionedDuration = durationMs;
       render();
     },
     onDestroy() {
