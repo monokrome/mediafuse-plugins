@@ -1,6 +1,6 @@
 // src/index.ts
 var DEFAULT_P5_CDN = "https://cdn.jsdelivr.net/npm/p5@1/lib/p5.min.js";
-function setup({ register: reg }) {
+function setup({ register: reg, load }) {
   let container = null;
   let p5Instance = null;
   let isDev = false;
@@ -61,11 +61,7 @@ function setup({ register: reg }) {
       await loadScript(p5Cdn);
     }
     const sketch = config.sketch;
-    const sketchUrl = isDev ? sketch + (sketch.includes("?") ? "&" : "?") + "t=" + Date.now() : sketch;
-    const sketchModule = await import(
-      /* webpackIgnore: true */
-      sketchUrl
-    );
+    const sketchModule = await load(sketch, "source");
     const sketchFn = sketchModule.default ?? sketchModule;
     if (typeof sketchFn !== "function") {
       console.error("[mediafuse-p5] Sketch module must export a function");
