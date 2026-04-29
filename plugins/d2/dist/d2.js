@@ -1,6 +1,7 @@
 // src/index.ts
 var DEFAULT_BASE = "http://localhost:7770";
 var DEFAULT_POLL_MS = 5e3;
+var ORBIT_GRACE_MS = 3e4;
 var BUCKET_KINETIC = 1498876634;
 var BUCKET_ENERGY = 2465295065;
 var BUCKET_POWER = 953998645;
@@ -17,27 +18,6 @@ var ARMOR_BUCKETS = [
   BUCKET_LEGS,
   BUCKET_CLASS_ARMOR
 ];
-var SUBCLASS_ELEMENT = {
-  // Hunter
-  Gunslinger: "Solar",
-  Nightstalker: "Void",
-  Arcstrider: "Arc",
-  Revenant: "Stasis",
-  Threadrunner: "Strand",
-  // Warlock
-  Dawnblade: "Solar",
-  Voidwalker: "Void",
-  Stormcaller: "Arc",
-  Shadebinder: "Stasis",
-  Broodweaver: "Strand",
-  // Titan
-  Sunbreaker: "Solar",
-  Sentinel: "Void",
-  Striker: "Arc",
-  Behemoth: "Stasis",
-  Berserker: "Strand",
-  Prismatic: "Prismatic"
-};
 function findItem(equipped, bucket) {
   return equipped.find((e) => e.bucket_hash === bucket) ?? null;
 }
@@ -46,20 +26,14 @@ function findExoticArmor(equipped) {
     (e) => ARMOR_BUCKETS.includes(e.bucket_hash) && e.tier === "Exotic"
   ) ?? null;
 }
-function buildClassDisplay(state, equipped) {
-  const subclass = findItem(equipped, BUCKET_SUBCLASS);
-  const element = subclass ? SUBCLASS_ELEMENT[subclass.item_name] ?? "" : "";
-  const className = state.character.class;
-  return element ? `${element} ${className}` : className;
-}
 function buildSecondaryItems(state, loadoutData) {
   const charLoadout = loadoutData.find(
     (c) => c.character.id === state.character.id
   );
   if (!charLoadout) return [];
-  const items = [
-    { label: "Current Class", value: buildClassDisplay(state, charLoadout.equipped) }
-  ];
+  const subclass = state.character.subclass || findItem(charLoadout.equipped, BUCKET_SUBCLASS)?.item_name || "";
+  const items = [];
+  if (subclass) items.push({ label: "", value: `Playing as ${subclass}` });
   const exotic = findExoticArmor(charLoadout.equipped);
   if (exotic) items.push({ label: "Exotic Armor", value: exotic.item_name });
   const kinetic = findItem(charLoadout.equipped, BUCKET_KINETIC);
@@ -84,8 +58,9 @@ function setup({ register: reg }) {
     onCreate(ctx) {
       const base = ctx.config.d2Base || DEFAULT_BASE;
       const pollMs = ctx.config.d2PollMs || DEFAULT_POLL_MS;
-      let lastActivity = "\0";
-      let lastSecondaryKey = "\0";
+      let orbitSince = 0;
+      let lastActivity = "";
+      let lastSecondaryKey = "";
       async function poll() {
         let stateRes;
         let loadoutRes;
@@ -108,7 +83,15 @@ function setup({ register: reg }) {
         const loadoutBody = await loadoutRes.json();
         const state = stateBody.data;
         const loadoutData = loadoutBody.data;
-        const activity = buildActivityText(state);
+        let activity = buildActivityText(state);
+        if (state.activity.in_orbit) {
+          if (orbitSince === 0) orbitSince = Date.now();
+          if (Date.now() - orbitSince < ORBIT_GRACE_MS && lastActivity) {
+            activity = lastActivity;
+          }
+        } else {
+          orbitSince = 0;
+        }
         const activityKey = activity ?? "";
         if (activityKey !== lastActivity) {
           lastActivity = activityKey;
