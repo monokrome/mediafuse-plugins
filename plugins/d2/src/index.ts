@@ -81,7 +81,7 @@ function buildSecondaryItems(
     "";
 
   const items: { label: string; value: string }[] = [];
-  if (subclass) items.push({ label: "Subclass", value: subclass });
+  if (subclass) items.push({ label: "", value: `Playing as ${subclass}` });
 
   const exotic = findExoticArmor(charLoadout.equipped);
   if (exotic) items.push({ label: "Exotic Armor", value: exotic.item_name });
