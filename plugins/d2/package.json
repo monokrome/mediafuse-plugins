@@ -1,0 +1,19 @@
+{
+  "name": "@mediafuse/d2",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "BSD-2-Clause",
+  "main": "dist/d2.js",
+  "mediafuse": {
+    "plugins": ["./src/index.ts"]
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=esm --outfile=dist/d2.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
