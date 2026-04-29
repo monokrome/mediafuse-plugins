@@ -34,30 +34,6 @@ const ARMOR_BUCKETS = [
   BUCKET_CLASS_ARMOR,
 ];
 
-// Maps a subclass item_name to its damage element. Prismatic gets handled
-// when the subclass name is literally "Prismatic".
-const SUBCLASS_ELEMENT: Record<string, string> = {
-  // Hunter
-  Gunslinger: "Solar",
-  Nightstalker: "Void",
-  Arcstrider: "Arc",
-  Revenant: "Stasis",
-  Threadrunner: "Strand",
-  // Warlock
-  Dawnblade: "Solar",
-  Voidwalker: "Void",
-  Stormcaller: "Arc",
-  Shadebinder: "Stasis",
-  Broodweaver: "Strand",
-  // Titan
-  Sunbreaker: "Solar",
-  Sentinel: "Void",
-  Striker: "Arc",
-  Behemoth: "Stasis",
-  Berserker: "Strand",
-  Prismatic: "Prismatic",
-};
-
 interface LoadoutItem {
   bucket_hash: number;
   item_name: string;
@@ -75,7 +51,7 @@ interface StateData {
     mode: { name: string };
     name: string;
   };
-  character: { id: string; class: string };
+  character: { id: string; class: string; subclass?: string };
 }
 
 function findItem(equipped: LoadoutItem[], bucket: number): LoadoutItem | null {
@@ -90,13 +66,6 @@ function findExoticArmor(equipped: LoadoutItem[]): LoadoutItem | null {
   );
 }
 
-function buildClassDisplay(state: StateData, equipped: LoadoutItem[]): string {
-  const subclass = findItem(equipped, BUCKET_SUBCLASS);
-  const element = subclass ? SUBCLASS_ELEMENT[subclass.item_name] ?? "" : "";
-  const className = state.character.class;
-  return element ? `${element} ${className}` : className;
-}
-
 function buildSecondaryItems(
   state: StateData,
   loadoutData: LoadoutCharacter[],
@@ -106,9 +75,13 @@ function buildSecondaryItems(
   );
   if (!charLoadout) return [];
 
-  const items: { label: string; value: string }[] = [
-    { label: "Current Class", value: buildClassDisplay(state, charLoadout.equipped) },
-  ];
+  const subclass =
+    state.character.subclass ||
+    findItem(charLoadout.equipped, BUCKET_SUBCLASS)?.item_name ||
+    "";
+
+  const items: { label: string; value: string }[] = [];
+  if (subclass) items.push({ label: "Subclass", value: subclass });
 
   const exotic = findExoticArmor(charLoadout.equipped);
   if (exotic) items.push({ label: "Exotic Armor", value: exotic.item_name });
