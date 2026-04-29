@@ -98,8 +98,8 @@ function setup({ register: reg }) {
           if (lastActivity !== "" || lastSecondaryKey !== "[]") {
             lastActivity = "";
             lastSecondaryKey = "[]";
-            ctx.emit?.("command", { name: "d2_activity", data: null });
-            ctx.emit?.("command", { name: "d2_loadout", data: [] });
+            ctx.emit?.("command", { name: "activity", data: null });
+            ctx.emit?.("command", { name: "secondary_info", data: [] });
           }
           return;
         }
@@ -112,13 +112,13 @@ function setup({ register: reg }) {
         const activityKey = activity ?? "";
         if (activityKey !== lastActivity) {
           lastActivity = activityKey;
-          ctx.emit?.("command", { name: "d2_activity", data: activity });
+          ctx.emit?.("command", { name: "activity", data: activity });
         }
         const items = buildSecondaryItems(state, loadoutData);
         const itemsKey = JSON.stringify(items);
         if (itemsKey !== lastSecondaryKey) {
           lastSecondaryKey = itemsKey;
-          ctx.emit?.("command", { name: "d2_loadout", data: items });
+          ctx.emit?.("command", { name: "secondary_info", data: items });
         }
       }
       poll();
