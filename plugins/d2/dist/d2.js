@@ -61,7 +61,17 @@ function setup({ register: reg }) {
       let orbitSince = 0;
       let lastActivity = "";
       let lastSecondaryKey = "";
-      async function poll() {
+      let polling = false;
+      let stopped = false;
+      function emitOffline() {
+        if (lastActivity !== "" || lastSecondaryKey !== "[]") {
+          lastActivity = "";
+          lastSecondaryKey = "[]";
+          ctx.emit?.("command", { name: "activity", data: null });
+          ctx.emit?.("command", { name: "secondary_info", data: [] });
+        }
+      }
+      async function pollOnce() {
         let stateRes;
         let loadoutRes;
         try {
@@ -70,17 +80,19 @@ function setup({ register: reg }) {
             fetch(`${base}/api/loadout`, { cache: "no-store" })
           ]);
         } catch {
-          if (lastActivity !== "" || lastSecondaryKey !== "[]") {
-            lastActivity = "";
-            lastSecondaryKey = "[]";
-            ctx.emit?.("command", { name: "activity", data: null });
-            ctx.emit?.("command", { name: "secondary_info", data: [] });
-          }
+          emitOffline();
           return;
         }
         if (!stateRes.ok || !loadoutRes.ok) return;
-        const stateBody = await stateRes.json();
-        const loadoutBody = await loadoutRes.json();
+        let stateBody;
+        let loadoutBody;
+        try {
+          stateBody = await stateRes.json();
+          loadoutBody = await loadoutRes.json();
+        } catch (err) {
+          console.error("[d2] failed to parse API response:", err);
+          return;
+        }
         const state = stateBody.data;
         const loadoutData = loadoutBody.data;
         let activity = buildActivityText(state);
@@ -104,9 +116,23 @@ function setup({ register: reg }) {
           ctx.emit?.("command", { name: "secondary_info", data: items });
         }
       }
+      async function poll() {
+        if (polling || stopped) return;
+        polling = true;
+        try {
+          await pollOnce();
+        } catch (err) {
+          console.error("[d2] poll error:", err);
+        } finally {
+          polling = false;
+        }
+      }
       poll();
       const intervalId = setInterval(poll, pollMs);
-      stop = () => clearInterval(intervalId);
+      stop = () => {
+        stopped = true;
+        clearInterval(intervalId);
+      };
     },
     onDestroy() {
       stop?.();

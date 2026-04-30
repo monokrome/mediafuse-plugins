@@ -118,8 +118,19 @@ function setup({ register: reg }: PluginContext): void {
 
       let lastActivity = "";
       let lastSecondaryKey = "";
+      let polling = false;
+      let stopped = false;
 
-      async function poll(): Promise<void> {
+      function emitOffline(): void {
+        if (lastActivity !== "" || lastSecondaryKey !== "[]") {
+          lastActivity = "";
+          lastSecondaryKey = "[]";
+          ctx.emit?.("command", { name: "activity", data: null });
+          ctx.emit?.("command", { name: "secondary_info", data: [] });
+        }
+      }
+
+      async function pollOnce(): Promise<void> {
         let stateRes: Response;
         let loadoutRes: Response;
         try {
@@ -128,20 +139,22 @@ function setup({ register: reg }: PluginContext): void {
             fetch(`${base}/api/loadout`, { cache: "no-store" }),
           ]);
         } catch {
-          // server unreachable — emit offline once per transition
-          if (lastActivity !== "" || lastSecondaryKey !== "[]") {
-            lastActivity = "";
-            lastSecondaryKey = "[]";
-            ctx.emit?.("command", { name: "activity", data: null });
-            ctx.emit?.("command", { name: "secondary_info", data: [] });
-          }
+          emitOffline();
           return;
         }
 
         if (!stateRes.ok || !loadoutRes.ok) return;
 
-        const stateBody = (await stateRes.json()) as { data: StateData };
-        const loadoutBody = (await loadoutRes.json()) as { data: LoadoutCharacter[] };
+        let stateBody: { data: StateData };
+        let loadoutBody: { data: LoadoutCharacter[] };
+        try {
+          stateBody = (await stateRes.json()) as { data: StateData };
+          loadoutBody = (await loadoutRes.json()) as { data: LoadoutCharacter[] };
+        } catch (err) {
+          console.error("[d2] failed to parse API response:", err);
+          return;
+        }
+
         const state = stateBody.data;
         const loadoutData = loadoutBody.data;
 
@@ -168,9 +181,24 @@ function setup({ register: reg }: PluginContext): void {
         }
       }
 
+      async function poll(): Promise<void> {
+        if (polling || stopped) return;
+        polling = true;
+        try {
+          await pollOnce();
+        } catch (err) {
+          console.error("[d2] poll error:", err);
+        } finally {
+          polling = false;
+        }
+      }
+
       poll();
       const intervalId = setInterval(poll, pollMs);
-      stop = () => clearInterval(intervalId);
+      stop = () => {
+        stopped = true;
+        clearInterval(intervalId);
+      };
     },
     onDestroy() {
       stop?.();
