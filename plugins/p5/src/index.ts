@@ -45,7 +45,7 @@ function setup({ register: reg, load }: PluginContext): void {
   let isDev = false;
   let messageActioned: ((duration: number | null) => void) | null = null;
   let pendingMessage: StoredMessage | null | undefined = undefined;
-  let pendingCommand: { name: string; data: unknown } | undefined = undefined;
+  const pendingCommands: { name: string; data: unknown }[] = [];
 
   const registered = reg("overlay", {
     onCreate(ctx: CreateContext) {
@@ -60,7 +60,7 @@ function setup({ register: reg, load }: PluginContext): void {
         return;
       }
 
-      init(ctx.config);
+      runInitWithRetry(ctx.config);
     },
     onMessage(msg) {
       if (!p5Instance) {
@@ -71,7 +71,7 @@ function setup({ register: reg, load }: PluginContext): void {
     },
     onCommand(cmd) {
       if (!p5Instance) {
-        pendingCommand = cmd;
+        pendingCommands.push(cmd);
         return;
       }
       forward("commandReceived", cmd);
@@ -95,10 +95,28 @@ function setup({ register: reg, load }: PluginContext): void {
       forward("messageReceived", pendingMessage);
       pendingMessage = undefined;
     }
-    if (pendingCommand !== undefined) {
-      forward("commandReceived", pendingCommand);
-      pendingCommand = undefined;
+    while (pendingCommands.length > 0) {
+      forward("commandReceived", pendingCommands.shift());
     }
+  }
+
+  async function runInitWithRetry(config: Record<string, unknown>): Promise<void> {
+    const delays = [0, 1000, 3000, 7000, 15000];
+    for (let attempt = 0; attempt < delays.length; attempt++) {
+      if (delays[attempt] > 0) {
+        await new Promise((r) => setTimeout(r, delays[attempt]));
+      }
+      try {
+        await init(config);
+        return;
+      } catch (err) {
+        console.warn(
+          `[mediafuse-p5] init attempt ${attempt + 1} failed:`,
+          err,
+        );
+      }
+    }
+    console.error("[mediafuse-p5] init giving up after retries");
   }
 
   async function init(config: Record<string, unknown>): Promise<void> {

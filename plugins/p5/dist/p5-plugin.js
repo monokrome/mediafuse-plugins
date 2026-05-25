@@ -6,7 +6,7 @@ function setup({ register: reg, load }) {
   let isDev = false;
   let messageActioned = null;
   let pendingMessage = void 0;
-  let pendingCommand = void 0;
+  const pendingCommands = [];
   const registered = reg("overlay", {
     onCreate(ctx) {
       container = ctx.container;
@@ -18,7 +18,7 @@ function setup({ register: reg, load }) {
         console.warn("[mediafuse-p5] No sketch URL provided in config");
         return;
       }
-      init(ctx.config);
+      runInitWithRetry(ctx.config);
     },
     onMessage(msg) {
       if (!p5Instance) {
@@ -29,7 +29,7 @@ function setup({ register: reg, load }) {
     },
     onCommand(cmd) {
       if (!p5Instance) {
-        pendingCommand = cmd;
+        pendingCommands.push(cmd);
         return;
       }
       forward("commandReceived", cmd);
@@ -50,10 +50,27 @@ function setup({ register: reg, load }) {
       forward("messageReceived", pendingMessage);
       pendingMessage = void 0;
     }
-    if (pendingCommand !== void 0) {
-      forward("commandReceived", pendingCommand);
-      pendingCommand = void 0;
+    while (pendingCommands.length > 0) {
+      forward("commandReceived", pendingCommands.shift());
     }
+  }
+  async function runInitWithRetry(config) {
+    const delays = [0, 1e3, 3e3, 7e3, 15e3];
+    for (let attempt = 0; attempt < delays.length; attempt++) {
+      if (delays[attempt] > 0) {
+        await new Promise((r) => setTimeout(r, delays[attempt]));
+      }
+      try {
+        await init(config);
+        return;
+      } catch (err) {
+        console.warn(
+          `[mediafuse-p5] init attempt ${attempt + 1} failed:`,
+          err
+        );
+      }
+    }
+    console.error("[mediafuse-p5] init giving up after retries");
   }
   async function init(config) {
     const p5Cdn = config.p5Cdn || DEFAULT_P5_CDN;
