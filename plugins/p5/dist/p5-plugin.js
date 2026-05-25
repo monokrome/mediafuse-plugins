@@ -55,22 +55,21 @@ function setup({ register: reg, load }) {
     }
   }
   async function runInitWithRetry(config) {
-    const delays = [0, 1e3, 3e3, 7e3, 15e3];
-    for (let attempt = 0; attempt < delays.length; attempt++) {
-      if (delays[attempt] > 0) {
-        await new Promise((r) => setTimeout(r, delays[attempt]));
-      }
+    let attempt = 0;
+    while (true) {
       try {
         await init(config);
         return;
       } catch (err) {
+        const delay = Math.min(3e4, 1e3 * Math.pow(2, attempt));
+        attempt++;
         console.warn(
-          `[mediafuse-p5] init attempt ${attempt + 1} failed:`,
+          `[mediafuse-p5] init attempt ${attempt} failed; retrying in ${delay}ms:`,
           err
         );
+        await new Promise((r) => setTimeout(r, delay));
       }
     }
-    console.error("[mediafuse-p5] init giving up after retries");
   }
   async function init(config) {
     const p5Cdn = config.p5Cdn || DEFAULT_P5_CDN;

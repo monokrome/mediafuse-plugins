@@ -101,22 +101,21 @@ function setup({ register: reg, load }: PluginContext): void {
   }
 
   async function runInitWithRetry(config: Record<string, unknown>): Promise<void> {
-    const delays = [0, 1000, 3000, 7000, 15000];
-    for (let attempt = 0; attempt < delays.length; attempt++) {
-      if (delays[attempt] > 0) {
-        await new Promise((r) => setTimeout(r, delays[attempt]));
-      }
+    let attempt = 0;
+    while (true) {
       try {
         await init(config);
         return;
       } catch (err) {
+        const delay = Math.min(30000, 1000 * Math.pow(2, attempt));
+        attempt++;
         console.warn(
-          `[mediafuse-p5] init attempt ${attempt + 1} failed:`,
+          `[mediafuse-p5] init attempt ${attempt} failed; retrying in ${delay}ms:`,
           err,
         );
+        await new Promise((r) => setTimeout(r, delay));
       }
     }
-    console.error("[mediafuse-p5] init giving up after retries");
   }
 
   async function init(config: Record<string, unknown>): Promise<void> {
